@@ -6,11 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint ."
   },
-  "dependencies": {
-    "@types/date-fns": "^2.5.3",
-    "date-fns": "^4.1.0",
+"dependencies": {
+  "date-fns": "^4.1.0",
     "fns": "^1.0.0",
     "framer-motion": "^12.29.2",
     "lucide-react": "^0.563.0",

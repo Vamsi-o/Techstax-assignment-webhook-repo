@@ -138,7 +138,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { GitBranch, GitMerge, GitPullRequest, Clock } from 'lucide-react';
+import { GitBranch, GitMerge, GitPullRequest, Clock, GitCommit } from 'lucide-react';
 import { WebhookEvent } from '@/types/event';
 // import { formatDistanceToNow } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
@@ -148,7 +148,12 @@ interface EventCardProps {
   index: number;
 }
 
-const eventConfig = {
+const defaultEventConfig = {
+  icon: GitCommit,
+  label: 'performed action on',
+};
+
+const eventConfig: Record<string, { icon: typeof GitCommit; label: string }> = {
   PUSH: {
     icon: GitBranch,
     label: 'pushed to',
@@ -164,12 +169,15 @@ const eventConfig = {
 };
 
 export function EventCard({ event, index }: EventCardProps) {
-  const config = eventConfig[event.action];
+  const config = eventConfig[event.action] ?? defaultEventConfig;
   const Icon = config.icon;
 
   const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return { relative: 'Just now', full: timestamp };
+    }
     try {
-      const date = new Date(timestamp);
       return {
         relative: formatDistanceToNow(date, { addSuffix: true }),
         full: date.toLocaleString('en-US', {

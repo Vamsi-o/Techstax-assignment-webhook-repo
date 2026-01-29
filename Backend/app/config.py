@@ -42,7 +42,8 @@ if __name__ == '__main__':
     
     try:
         Config.validate()
-        logger.info(f"MongoDB URI: {Config.MONGODB_URI[:30]}...")
+        # Only confirm URI is set without exposing potential credentials
+        logger.info(f"MongoDB URI: [REDACTED, length={len(Config.MONGODB_URI)}]")
         logger.info(f"DB Name: {Config.DB_NAME}")
         logger.info(f"Port: {Config.PORT}")
         logger.info("✅ Config test passed")

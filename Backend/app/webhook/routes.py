@@ -47,68 +47,228 @@ def health():
     }), 200
 
 
+# @webhook_bp.route('/webhook', methods=['POST'])
+# def receive_webhook():
+#     """
+#     Receive and process GitHub webhook
+    
+#     Flow:
+#     1. Receive JSON payload from GitHub
+#     2. Validate payload structure
+#     3. Parse the webhook (PUSH/PR/MERGE)
+#     4. Save to MongoDB
+#     5. Return success/error response
+    
+#     Returns:
+#         - 200: Webhook processed successfully
+#         - 400: Invalid payload or unsupported event
+#         - 500: Server error (database failure, etc.)
+#         - 503: Database unavailable
+    
+#     Why different status codes?
+#     - GitHub uses these to know if webhook delivered successfully
+#     - 200 = success, don't retry
+#     - 400 = bad request, don't retry
+#     - 500/503 = server error, GitHub will retry later
+#     """
+#     try:
+#         # Get JSON payload from request
+#         # request.json automatically parses JSON from request body
+#         data = request.json
+        
+#         # Validate payload exists
+#         # Why? Sometimes requests come with empty body
+#         if not data:
+#             return jsonify({'error': 'No data received'}), 400
+        
+#         # Parse the webhook using our parser
+#         # Returns None if unsupported or invalid event
+#         event_data = parse_webhook(data)
+        
+#         if not event_data:
+#             # Parsing failed or unsupported event type
+#             return jsonify({'error': 'Failed to parse webhook'}), 400
+        
+#         # Check database connection before trying to save
+#         # Why? Better to check first than catch error after
+#         if not db.is_connected():
+#             logger.warning("Database not connected, attempting reconnect...")
+            
+#             # Try to reconnect
+#             from app.config import Config
+#             db.connect(Config.MONGODB_URI, Config.DB_NAME, Config.COLLECTION_NAME)
+            
+#             # Still not connected? Return 503 (service unavailable)
+#             if not db.is_connected():
+#                 return jsonify({'error': 'Database unavailable'}), 503
+        
+#         # Save event to MongoDB
+#         # insert_one() returns result with inserted_id
+#         result = db.collection.insert_one(event_data)
+#         logger.info(f"Saved to MongoDB: {result.inserted_id}")
+        
+#         # Return success response with details
+#         # GitHub sees 200 = webhook delivered successfully
+#         return jsonify({
+#             'status': 'success',
+#             'action': event_data['action'],
+#             'author': event_data['author'],
+#             'id': str(result.inserted_id)
+#         }), 200
+        
+#     except Exception as e:
+#         # Catch any unexpected errors
+#         # Log the error and return 500
+#         # Why 500? Tells GitHub "our server had a problem, retry later"
+#         logger.error(f"Error processing webhook: {e}")
+#         return jsonify({'error': 'Internal server error'}), 500
+
+# @webhook_bp.route('/webhook', methods=['POST'])
+# def receive_webhook():
+#     try:
+#         data = request.json
+#         logger.info(f"Received webhook: {request.headers.get('X-GitHub-Event', 'unknown')}")
+        
+#         if not data:
+#             logger.warning("Received empty webhook payload")
+#             return jsonify({'error': 'No data received'}), 400
+        
+#         # Parse the webhook
+#         event_data = parse_webhook(data)
+        
+#         if not event_data:
+#             logger.warning("Failed to parse webhook or unsupported event")
+#             return jsonify({'error': 'Failed to parse webhook'}), 400
+        
+#         # Debug: Check what we got from parser
+#         logger.info(f"Event data from parser: {event_data}")
+        
+#         # Check database connection
+#         if not db.is_connected():
+#             logger.error("Database not connected, attempting reconnect...")
+#             from app.config import Config
+#             db.connect(Config.MONGODB_URI, Config.DB_NAME, Config.COLLECTION_NAME)
+            
+#             if not db.is_connected():
+#                 logger.error("Database reconnection failed")
+#                 return jsonify({'error': 'Database unavailable'}), 503
+        
+#         # Save to MongoDB
+#         try:
+#             result = db.collection.insert_one(event_data)
+#             logger.info(f"Successfully saved event to MongoDB: {result.inserted_id}")
+#         except Exception as db_error:
+#             logger.error(f"Database insert failed: {db_error}", exc_info=True)
+#             return jsonify({'error': 'Database insert failed'}), 500
+        
+#         return jsonify({
+#             'status': 'success',
+#             'action': event_data['action'],
+#             'author': event_data['author'],
+#             'id': str(result.inserted_id)
+#         }), 200
+        
+#     except Exception as e:
+#         logger.error(f"Error processing webhook: {e}", exc_info=True)
+#         return jsonify({'error': 'Internal server error'}), 500
+
+@webhook_bp.route('/webhook', methods=['POST'])
+# def receive_webhook():
+#     try:
+#         data = request.json
+        
+#         # Log GitHub event type and PR action if it's a PR
+#         event_type = request.headers.get('X-GitHub-Event', 'unknown')
+#         logger.info(f"Received GitHub event: {event_type}")
+        
+#         if 'pull_request' in data:
+#             pr_action = data.get('action', 'unknown')
+#             logger.info(f"PR action: {pr_action}")
+        
+#         if not data:
+#             logger.warning("Received empty webhook payload")
+#             return jsonify({'error': 'No data received'}), 400
+        
+#         # Parse the webhook
+#         event_data = parse_webhook(data)
+        
+#         if not event_data:
+#             logger.warning(f"Failed to parse webhook. Event type: {event_type}")
+#             return jsonify({'error': 'Failed to parse webhook'}), 400
+        
+#         logger.info(f"Parsed event data: {event_data}")
+        
+#         # Check database connection
+#         if not db.is_connected():
+#             logger.error("Database not connected")
+#             return jsonify({'error': 'Database unavailable'}), 503
+        
+#         # Save to MongoDB
+#         try:
+#             result = db.collection.insert_one(event_data)
+#             logger.info(f"✅ Saved to MongoDB: {result.inserted_id}")
+#         except Exception as db_error:
+#             logger.error(f"❌ Database insert failed: {db_error}", exc_info=True)
+#             return jsonify({'error': 'Database insert failed'}), 500
+        
+#         return jsonify({
+#             'status': 'success',
+#             'action': event_data['action'],
+#             'author': event_data['author'],
+#             'id': str(result.inserted_id)
+#         }), 200
+        
+#     except Exception as e:
+#         logger.error(f"❌ Error processing webhook: {e}", exc_info=True)
+#         return jsonify({'error': 'Internal server error'}), 500
+
+
 @webhook_bp.route('/webhook', methods=['POST'])
 def receive_webhook():
-    """
-    Receive and process GitHub webhook
-    
-    Flow:
-    1. Receive JSON payload from GitHub
-    2. Validate payload structure
-    3. Parse the webhook (PUSH/PR/MERGE)
-    4. Save to MongoDB
-    5. Return success/error response
-    
-    Returns:
-        - 200: Webhook processed successfully
-        - 400: Invalid payload or unsupported event
-        - 500: Server error (database failure, etc.)
-        - 503: Database unavailable
-    
-    Why different status codes?
-    - GitHub uses these to know if webhook delivered successfully
-    - 200 = success, don't retry
-    - 400 = bad request, don't retry
-    - 500/503 = server error, GitHub will retry later
-    """
     try:
-        # Get JSON payload from request
-        # request.json automatically parses JSON from request body
-        data = request.json
+        data = request.get_json(silent=True)
         
-        # Validate payload exists
-        # Why? Sometimes requests come with empty body
+        # Guard against empty/invalid payload immediately
         if not data:
+            logger.warning("Received empty or invalid webhook payload")
             return jsonify({'error': 'No data received'}), 400
         
-        # Parse the webhook using our parser
-        # Returns None if unsupported or invalid event
+        # Log GitHub event type
+        event_type = request.headers.get('X-GitHub-Event', 'unknown')
+        logger.info(f"📥 Received GitHub event: {event_type}")
+        
+        # Log PR action if it's a PR event
+        if 'pull_request' in data:
+            pr_action = data.get('action', 'unknown')
+            logger.info(f"PR action: {pr_action}")
+        
+        # Parse the webhook
         event_data = parse_webhook(data)
         
+        # If parser returns None, it means the event was skipped (not an error)
         if not event_data:
-            # Parsing failed or unsupported event type
-            return jsonify({'error': 'Failed to parse webhook'}), 400
+            logger.info(f"⏭️  Event skipped or not relevant: {event_type}")
+            return jsonify({
+                'status': 'skipped',
+                'message': 'Event type not supported or not relevant',
+                'event_type': event_type
+            }), 200  # ← Return 200, not 400!
         
-        # Check database connection before trying to save
-        # Why? Better to check first than catch error after
+        logger.info(f"✅ Parsed event data: {event_data}")
+        
+        # Check database connection
         if not db.is_connected():
-            logger.warning("Database not connected, attempting reconnect...")
-            
-            # Try to reconnect
-            from app.config import Config
-            db.connect(Config.MONGODB_URI, Config.DB_NAME, Config.COLLECTION_NAME)
-            
-            # Still not connected? Return 503 (service unavailable)
-            if not db.is_connected():
-                return jsonify({'error': 'Database unavailable'}), 503
+            logger.error("❌ Database not connected")
+            return jsonify({'error': 'Database unavailable'}), 503
         
-        # Save event to MongoDB
-        # insert_one() returns result with inserted_id
-        result = db.collection.insert_one(event_data)
-        logger.info(f"Saved to MongoDB: {result.inserted_id}")
+        # Save to MongoDB
+        try:
+            result = db.collection.insert_one(event_data)
+            logger.info(f"💾 Saved to MongoDB: {result.inserted_id}")
+        except Exception as db_error:
+            logger.error(f"❌ Database insert failed: {db_error}", exc_info=True)
+            return jsonify({'error': 'Database insert failed'}), 500
         
-        # Return success response with details
-        # GitHub sees 200 = webhook delivered successfully
         return jsonify({
             'status': 'success',
             'action': event_data['action'],
@@ -117,69 +277,92 @@ def receive_webhook():
         }), 200
         
     except Exception as e:
-        # Catch any unexpected errors
-        # Log the error and return 500
-        # Why 500? Tells GitHub "our server had a problem, retry later"
-        logger.error(f"Error processing webhook: {e}")
+        logger.error(f"❌ Error processing webhook: {e}", exc_info=True)
         return jsonify({'error': 'Internal server error'}), 500
 
+# @webhook_bp.route('/events', methods=['GET'])
+# def get_events():
+#     """
+#     Get recent events from MongoDB
+    
+#     Returns last N events sorted by timestamp (newest first)
+    
+#     Response format:
+#     [
+#         {
+#             "_id": "65b9e...",
+#             "request_id": "abc123",
+#             "author": "Vamshi",
+#             "action": "PUSH",
+#             "from_branch": "main",
+#             "to_branch": "main",
+#             "timestamp": "2026-01-29T06:30:00Z"
+#         },
+#         ...
+#     ]
+    
+#     Returns:
+#         - 200: Events retrieved successfully
+#         - 503: Database unavailable
+#         - 500: Server error
+#     """
+#     try:
+#         # Check database connection
+#         if not db.is_connected():
+#             return jsonify({'error': 'Database unavailable'}), 503
+        
+#         # Fetch events from MongoDB
+#         # find() = get all documents (empty filter = match all)
+#         # sort('timestamp', -1) = sort by timestamp descending (newest first)
+#         # limit(50) = only return 50 most recent
+#         events = list(
+#             db.collection
+#             .find()
+#             .sort('timestamp', -1)
+#             .limit(50)
+#         )
+        
+#         # Convert ObjectId to string for JSON serialization
+#         # Why? MongoDB _id is ObjectId type, JSON can't serialize it
+#         # Must convert to string first
+#         for event in events:
+#             event['_id'] = str(event['_id'])
+        
+#         logger.info(f"Returning {len(events)} events")
+        
+#         # Return events as JSON array
+#         return jsonify(events), 200
+        
+#     except Exception as e:
+#         # Catch any errors during database query
+#         logger.error(f"Error fetching events: {e}")
+#         return jsonify({'error': 'Internal server error'}), 500
 
 @webhook_bp.route('/events', methods=['GET'])
 def get_events():
-    """
-    Get recent events from MongoDB
-    
-    Returns last N events sorted by timestamp (newest first)
-    
-    Response format:
-    [
-        {
-            "_id": "65b9e...",
-            "request_id": "abc123",
-            "author": "Vamshi",
-            "action": "PUSH",
-            "from_branch": "main",
-            "to_branch": "main",
-            "timestamp": "2026-01-29T06:30:00Z"
-        },
-        ...
-    ]
-    
-    Returns:
-        - 200: Events retrieved successfully
-        - 503: Database unavailable
-        - 500: Server error
-    """
+    """Get recent events from MongoDB - sorted newest first"""
     try:
-        # Check database connection
         if not db.is_connected():
+            logger.error("Database not connected")
             return jsonify({'error': 'Database unavailable'}), 503
         
-        # Fetch events from MongoDB
-        # find() = get all documents (empty filter = match all)
-        # sort('timestamp', -1) = sort by timestamp descending (newest first)
-        # limit(50) = only return 50 most recent
+        # Fetch events sorted by timestamp descending (newest first)
         events = list(
             db.collection
             .find()
-            .sort('timestamp', -1)
+            .sort('timestamp', -1)  # -1 = descending (newest first)
             .limit(50)
         )
         
-        # Convert ObjectId to string for JSON serialization
-        # Why? MongoDB _id is ObjectId type, JSON can't serialize it
-        # Must convert to string first
+        # Convert ObjectId to string
         for event in events:
             event['_id'] = str(event['_id'])
         
         logger.info(f"Returning {len(events)} events")
-        
-        # Return events as JSON array
         return jsonify(events), 200
         
     except Exception as e:
-        # Catch any errors during database query
-        logger.error(f"Error fetching events: {e}")
+        logger.error(f"Error fetching events: {e}", exc_info=True)
         return jsonify({'error': 'Internal server error'}), 500
 
 

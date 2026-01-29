@@ -8,7 +8,7 @@ import { Activity, GitBranch, GitMerge, GitPullRequest, RefreshCw } from 'lucide
 import { EventCard } from './components/EventCard';
 import { WebhookEvent, EventStats } from '@/types/event';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const POLL_INTERVAL = 15000;
 
 export default function Home() {
@@ -28,42 +28,56 @@ export default function Home() {
     };
   };
 
-  const fetchEvents = async (showToast = false) => {
-    try {
-      setIsPolling(true);
-      setError(null);
+const fetchEvents = async (showToast = false) => {
+  try {
+    setIsPolling(true);
+    setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/events`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
-
-      const data: WebhookEvent[] = await response.json();
-      
-      if (events.length > 0 && data.length > events.length) {
-        const newEvent = data[0];
-        toast.success(`New ${newEvent.action} event`, {
-          description: `${newEvent.author} → ${newEvent.to_branch}`,
-        });
-      }
-
-      setEvents(data);
-      setStats(calculateStats(data));
-      setLastUpdate(new Date());
-      
-      if (showToast && data.length === events.length) {
-        toast.info('Up to date');
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      setError(message);
-      toast.error('Connection failed');
-    } finally {
-      setIsPolling(false);
-      setIsLoading(false);
+    const response = await fetch(`${API_BASE_URL}/events`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch events');
     }
-  };
+
+    const data: WebhookEvent[] = await response.json();
+    
+    // Sort by timestamp - newest first
+    data.sort((a, b) => {
+      const dateA = new Date(a.timestamp).getTime();
+      const dateB = new Date(b.timestamp).getTime();
+      return dateB - dateA; // Descending order
+    });
+    
+    // Check for new events (compare with current first item)
+    if (events.length > 0 && data.length > events.length) {
+      const newEvent = data[0]; // Now this is definitely the newest
+      toast.success(`New ${newEvent.action} event!`, {
+        description: `${newEvent.author} → ${newEvent.to_branch}`,
+        duration: 4000,
+      });
+    }
+
+    setEvents(data);
+    setStats(calculateStats(data));
+    setLastUpdate(new Date());
+    
+    if (showToast && data.length === events.length) {
+      toast.info('Up to date', { description: 'No new events', duration: 2000 });
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    setError(message);
+    toast.error('Connection failed', { 
+      description: 'Could not fetch events from backend',
+      duration: 3000 
+    });
+    console.error('Fetch error:', err);
+  } finally {
+    setIsPolling(false);
+    setIsLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchEvents();
@@ -74,7 +88,7 @@ export default function Home() {
       fetchEvents();
     }, POLL_INTERVAL);
     return () => clearInterval(interval);
-  }, [events]);
+  }, [fetchEvents]);
 
   const getLastUpdateText = () => {
     if (!lastUpdate) return 'Never';
