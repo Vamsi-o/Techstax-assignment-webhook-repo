@@ -8,7 +8,7 @@ import { Activity, GitBranch, GitMerge, GitPullRequest, RefreshCw } from 'lucide
 import { EventCard } from './components/EventCard';
 import { WebhookEvent, EventStats } from '@/types/event';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/['";\s]/g, '');
 const POLL_INTERVAL = 15000;
 
 export default function Home() {
@@ -88,7 +88,7 @@ const fetchEvents = async (showToast = false) => {
       fetchEvents();
     }, POLL_INTERVAL);
     return () => clearInterval(interval);
-  }, [fetchEvents]);
+  }, [events]);
 
   const getLastUpdateText = () => {
     if (!lastUpdate) return 'Never';
