@@ -1,0 +1,41 @@
+// {
+//     // Interpreter
+//     "python.defaultInterpreterPath": "${workspaceFolder}/Backend/.venv/bin/python",
+
+//     // Language server (MOST IMPORTANT)
+//     "python.languageServer": "Pylance",
+
+//     // Analysis
+//     "python.analysis.autoImportCompletions": true,
+//     "python.analysis.typeCheckingMode": "off",
+//     "python.analysis.autoSearchPaths": true,
+//     "python.analysis.extraPaths": [
+//         "${workspaceFolder}/Backend",
+//         "${workspaceFolder}/Backend/app"
+//     ],
+
+//     // Editor IntelliSense
+//     "editor.quickSuggestions": {
+//         "other": true,
+//         "comments": false,
+//         "strings": false
+//     },
+//     "editor.suggestOnTriggerCharacters": true,
+//     "editor.inlineSuggest.enabled": true,
+//     "editor.parameterHints.enabled": true,
+//     "editor.acceptSuggestionOnEnter": "on"
+// }
+
+
+
+{
+  "python.analysis.exclude": [
+    "**/.*",
+    "**/.venv/**",
+    "**/__pycache__/**",
+    "**/.git/**",
+    "**/node_modules/**"
+  ],
+  "python.analysis.indexing": true,
+  "python.analysis.autoImportCompletions": true
+}

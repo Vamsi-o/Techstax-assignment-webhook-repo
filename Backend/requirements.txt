@@ -1,0 +1,12 @@
+Flask
+Flask-Cors
+Flask-Login
+Flask-PyMongo
+pymongo
+
+Flask==3.0.0
+flask-cors==4.0.0
+pymongo==4.6.1
+python-dotenv==1.0.0
+gunicorn==21.2.0
+
