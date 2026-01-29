@@ -6,14 +6,14 @@ Endpoints:
 - POST /webhook  - Receive GitHub webhooks
 - GET  /events   - Get stored events
 """
-
+import logging
 # Fix imports when running directly
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from flask import Blueprint, request, jsonify
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import db
 from app.webhook.parsers import parse_webhook
 
@@ -22,7 +22,7 @@ from app.webhook.parsers import parse_webhook
 # Can register this blueprint in the main app
 webhook_bp = Blueprint('webhook', __name__)
 
-
+logger = logging.getLogger(__name__)
 @webhook_bp.route('/health', methods=['GET'])
 def health():
     """
@@ -42,7 +42,7 @@ def health():
     
     return jsonify({
         'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat(),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
         'database': db_status
     }), 200
 
@@ -92,7 +92,7 @@ def receive_webhook():
         # Check database connection before trying to save
         # Why? Better to check first than catch error after
         if not db.is_connected():
-            print("⚠️  Database not connected, attempting reconnect...")
+            logger.warning("Database not connected, attempting reconnect...")
             
             # Try to reconnect
             from app.config import Config
@@ -105,7 +105,7 @@ def receive_webhook():
         # Save event to MongoDB
         # insert_one() returns result with inserted_id
         result = db.collection.insert_one(event_data)
-        print(f"💾 Saved to MongoDB: {result.inserted_id}")
+        logger.info(f"Saved to MongoDB: {result.inserted_id}")
         
         # Return success response with details
         # GitHub sees 200 = webhook delivered successfully
@@ -120,7 +120,7 @@ def receive_webhook():
         # Catch any unexpected errors
         # Log the error and return 500
         # Why 500? Tells GitHub "our server had a problem, retry later"
-        print(f"❌ Error processing webhook: {e}")
+        logger.error(f"Error processing webhook: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
 
@@ -172,14 +172,14 @@ def get_events():
         for event in events:
             event['_id'] = str(event['_id'])
         
-        print(f"📤 Returning {len(events)} events")
+        logger.info(f"Returning {len(events)} events")
         
         # Return events as JSON array
         return jsonify(events), 200
         
     except Exception as e:
         # Catch any errors during database query
-        print(f"❌ Error fetching events: {e}")
+        logger.error(f"Error fetching events: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
 
@@ -190,17 +190,20 @@ if __name__ == '__main__':
     from app.config import Config
     from flask import Flask
     
-    print("=" * 60)
-    print("TESTING FLASK ROUTES")
-    print("=" * 60)
+    # Configure logging for tests
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    
+    logger.info("=" * 60)
+    logger.info("TESTING FLASK ROUTES")
+    logger.info("=" * 60)
     
     # Validate config
     Config.validate()
     
     # Connect to database
-    print("\nConnecting to database...")
+    logger.info("Connecting to database...")
     if not db.connect(Config.MONGODB_URI, Config.DB_NAME, Config.COLLECTION_NAME):
-        print("❌ Database connection failed - tests aborted")
+        logger.error("Database connection failed - tests aborted")
         exit(1)
     
     # Create test Flask app
@@ -211,19 +214,19 @@ if __name__ == '__main__':
     # Why test client? Can simulate HTTP requests without running server
     client = app.test_client()
     
-    print("\n" + "=" * 60)
-    print("[TEST 1] GET /health")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("[TEST 1] GET /health")
+    logger.info("=" * 60)
     response = client.get('/health')
-    print(f"Status: {response.status_code}")
-    print(f"Response: {response.json}")
+    logger.info(f"Status: {response.status_code}")
+    logger.info(f"Response: {response.json}")
     assert response.status_code == 200, "Health check should return 200"
     assert response.json['status'] == 'healthy', "Status should be healthy"
-    print("✅ Health check passed")
+    logger.info("Health check passed")
     
-    print("\n" + "=" * 60)
-    print("[TEST 2] POST /webhook - PUSH event")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("[TEST 2] POST /webhook - PUSH event")
+    logger.info("=" * 60)
     push_payload = {
         'ref': 'refs/heads/test-branch',
         'commits': [{
@@ -233,28 +236,28 @@ if __name__ == '__main__':
         }]
     }
     response = client.post('/webhook', json=push_payload)
-    print(f"Status: {response.status_code}")
-    print(f"Response: {response.json}")
+    logger.info(f"Status: {response.status_code}")
+    logger.info(f"Response: {response.json}")
     assert response.status_code == 200, "PUSH webhook should return 200"
     assert response.json['status'] == 'success', "Status should be success"
     assert response.json['action'] == 'PUSH', "Action should be PUSH"
-    print("✅ PUSH webhook test passed")
+    logger.info("PUSH webhook test passed")
     
-    print("\n" + "=" * 60)
-    print("[TEST 3] GET /events")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("[TEST 3] GET /events")
+    logger.info("=" * 60)
     response = client.get('/events')
-    print(f"Status: {response.status_code}")
-    print(f"Events count: {len(response.json)}")
+    logger.info(f"Status: {response.status_code}")
+    logger.info(f"Events count: {len(response.json)}")
     assert response.status_code == 200, "Events endpoint should return 200"
     assert len(response.json) > 0, "Should have at least 1 event"
-    print(f"✅ Events retrieval passed - {len(response.json)} events found")
+    logger.info(f"Events retrieval passed - {len(response.json)} events found")
     
     # Cleanup test data
-    print("\nCleaning up test data...")
+    logger.info("Cleaning up test data...")
     db.collection.delete_many({'request_id': 'test123'})
-    print("✅ Cleanup complete")
+    logger.info("Cleanup complete")
     
-    print("\n" + "=" * 60)
-    print("✅ ALL ROUTE TESTS PASSED")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("ALL ROUTE TESTS PASSED")
+    logger.info("=" * 60)

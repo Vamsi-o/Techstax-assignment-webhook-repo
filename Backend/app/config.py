@@ -1,8 +1,20 @@
 """Configuration - loads environment variables"""
 import os
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # Console output
+        logging.FileHandler('webhook.log')  # File output
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 class Config:
     # MongoDB
@@ -14,26 +26,25 @@ class Config:
     PORT = int(os.getenv('PORT', 5000))
     DEBUG = True
     
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+
     @staticmethod
     def validate():
-        """Validate required configuration exists"""
+        """Validate required configuration"""
         if not Config.MONGODB_URI:
-            raise ValueError("❌ MONGODB_URI is not set in .env file")
-        
-        # if '<db_password>' in Config.MONGODB_URI or '<password>' in Config.MONGODB_URI:
-        #     raise ValueError("❌ Replace <db_password> with your actual MongoDB password")
-        
-        print("✅ Configuration validated")
+            logger.error("MONGODB_URI not found in environment variables")
+            raise ValueError("MONGODB_URI is required")
+        logger.info("Configuration validated successfully")
 
 # Test this file
 if __name__ == '__main__':
-    print("Testing Config...")
+    logger.info("Testing Config...")
     
     try:
         Config.validate()
-        print(f"MongoDB URI: {Config.MONGODB_URI[:30]}...")
-        print(f"DB Name: {Config.DB_NAME}")
-        print(f"Port: {Config.PORT}")
-        print("✅ Config test passed")
+        logger.info(f"MongoDB URI: {Config.MONGODB_URI[:30]}...")
+        logger.info(f"DB Name: {Config.DB_NAME}")
+        logger.info(f"Port: {Config.PORT}")
+        logger.info("✅ Config test passed")
     except ValueError as e:
-        print(f"❌ Config test failed: {e}")
+        logger.error(f"❌ Config test failed: {e}")
