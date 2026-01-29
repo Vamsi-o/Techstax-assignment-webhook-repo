@@ -143,7 +143,11 @@ const fetchEvents = async (showToast = false) => {
                 animate={{ scale: 1 }}
                 className="text-4xl font-bold text-white"
               >
-                {isLoading ? '...' : stats.total}
+                {isLoading ? (
+                  <div className="h-10 w-12 bg-white/10 rounded animate-pulse" />
+                ) : (
+                  stats.total
+                )}
               </motion.p>
             </div>
 
@@ -158,7 +162,11 @@ const fetchEvents = async (showToast = false) => {
                 animate={{ scale: 1 }}
                 className="text-4xl font-bold text-white"
               >
-                {stats.pushes}
+                  {isLoading ? (
+                  <div className="h-10 w-12 bg-white/10 rounded animate-pulse" />
+                ) : (
+                  stats.pushes
+                )}
               </motion.p>
             </div>
 
@@ -173,7 +181,11 @@ const fetchEvents = async (showToast = false) => {
                 animate={{ scale: 1 }}
                 className="text-4xl font-bold text-white"
               >
-                {stats.pullRequests}
+              {isLoading ? (
+                  <div className="h-10 w-12 bg-white/10 rounded animate-pulse" />
+                ) : (
+                  stats.pullRequests
+                )}
               </motion.p>
             </div>
 
@@ -188,7 +200,11 @@ const fetchEvents = async (showToast = false) => {
                 animate={{ scale: 1 }}
                 className="text-4xl font-bold text-white"
               >
-                {stats.merges}
+                 {isLoading ? (
+                  <div className="h-10 w-12 bg-white/10 rounded animate-pulse" />
+                ) : (
+                  stats.merges
+                )}
               </motion.p>
             </div>
           </div>
