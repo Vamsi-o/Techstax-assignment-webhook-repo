@@ -2,16 +2,14 @@
 
 > Robust webhook receiver with real-time event tracking and monitoring — built for API integration reliability.
 
-![Demo Screenshot](frontend/public/image.png)
+![Demo Screenshot](frontend/public/webhook.png)
 
 ## 🌐 Live Links
 
 - **Frontend:** [techstax-assignment-webhook-repo-nt.vercel.app](https://techstax-assignment-webhook-repo-nt.vercel.app/)
 - **Backend API:** [echstax-assignment-webhook-repo-iamvamsi1725-vdm3vfi8.apn.leapcell.dev](https://echstax-assignment-webhook-repo-iamvamsi1725-vdm3vfi8.apn.leapcell.dev)
-- **Health Check:**[/health endpoint]https://echstax-assignment-webhook-repo-iamvamsi1725-vdm3vfl8.apn.leapcell.dev/health
+- **Health Check:**- **Health Check:** [/health endpoint](https://echstax-assignment-webhook-repo-iamvamsi1725-vdm3vfi8.apn.leapcell.dev/health)
 - **Test Repository:** [github.com/Vamsi-o/action-repo](https://github.com/Vamsi-o/action-repo)
-
----
 
 ## 🎯 Problem Statement
 
@@ -59,7 +57,7 @@ Modern API integrations require reliable webhook processing with visibility into
 
 ## 🏗️ Architecture
 
-![System Architecture](docs/architecture.png)
+![ARCHITECTURE](frontend/public/image.png)
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed component breakdown.
 
@@ -146,10 +144,6 @@ curl -X POST http://localhost:5000/webhook \
 ```
 
 ---
-
-## 📸 Screenshot
-
-![Dashboard](docs/screenshot.png)
 
 ---
 

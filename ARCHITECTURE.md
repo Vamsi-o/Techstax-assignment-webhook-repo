@@ -26,4 +26,4 @@
 - Event timeline with filtering
 - Statistics dashboard
 
-## High-Level Flow
+
