@@ -213,7 +213,9 @@ const fetchEvents = async (showToast = false) => {
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10">
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <RefreshCw className={`w-4 h-4 ${isPolling ? 'animate-spin' : ''}`} />
-              <span>Updated {getLastUpdateText()}</span>
+                <span>
+                Updated {isLoading ? 'Loading...' : getLastUpdateText()}
+                </span>
             </div>
             
             <button

@@ -347,13 +347,18 @@ def get_events():
             return jsonify({'error': 'Database unavailable'}), 503
         
         # Fetch events sorted by timestamp descending (newest first)
+        # events = list(
+        #     db.collection
+        #     .find()
+        #     .sort('timestamp', -1)  # -1 = descending (newest first)
+        #     .limit(50)
+        # )
         events = list(
             db.collection
             .find()
-            .sort('timestamp', -1)  # -1 = descending (newest first)
+            .sort([('timestamp', -1), ('_id', -1)])  # ✅ CORRECT SYNTAX WITH LIST!
             .limit(50)
         )
-        
         # Convert ObjectId to string
         for event in events:
             event['_id'] = str(event['_id'])
