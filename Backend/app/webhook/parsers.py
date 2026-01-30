@@ -1,139 +1,3 @@
-# import logging
-# from datetime import datetime
-# from typing import Optional
-# from uuid import uuid4
-
-# logger = logging.getLogger(__name__)
-
-# def parse_webhook(data: dict) -> Optional[dict]:
-#     """Main webhook parser - detects event type and routes to specific parser"""
-    
-#     # Detect event type
-#     if 'ref' in data and 'commits' in data:
-#         return parse_push(data)
-#     elif 'pull_request' in data:
-#         return parse_pull_request(data)
-#     else:
-#         logger.warning(f"Unsupported webhook event type: {list(data.keys())}")
-#         return None
-
-
-# def parse_push(data: dict) -> Optional[dict]:
-#     """Parse GitHub push webhook payload"""
-#     try:
-#         commits = data.get('commits', [])
-#         if not commits:
-#             logger.warning("Push event with no commits")
-#             return None
-        
-#         first_commit = commits[0]
-#         author = first_commit.get('author', {}).get('name', 'Unknown')
-#         ref = data.get('ref', 'refs/heads/unknown')
-#         branch = ref.split('/')[-1]
-#         timestamp = first_commit.get('timestamp', datetime.utcnow().isoformat())
-#         commit_id = first_commit.get('id', str(uuid4()))
-        
-#         logger.info(f"Parsed PUSH: {author} -> {branch}")
-        
-#         return {
-#             'request_id': commit_id,
-#             'author': author,
-#             'action': 'PUSH',
-#             'from_branch': branch,
-#             'to_branch': branch,
-#             'timestamp': timestamp
-#         }
-#     except Exception as e:
-#         logger.error(f"Error parsing push event: {e}", exc_info=True)
-#         return None
-
-
-# # def parse_pull_request(data: dict) -> Optional[dict]:
-# #     """Parse GitHub pull request webhook payload"""
-# #     try:
-# #         pr = data.get('pull_request', {})
-# #         action = data.get('action', '')
-        
-# #         # Only process 'opened' and 'closed' actions
-# #         if action not in ['opened', 'closed']:
-# #             logger.debug(f"Skipping PR action: {action}")
-# #             return None
-        
-# #         author = pr.get('user', {}).get('login', 'Unknown')
-# #         from_branch = pr.get('head', {}).get('ref', 'unknown')
-# #         to_branch = pr.get('base', {}).get('ref', 'unknown')
-# #         timestamp = pr.get('created_at', datetime.utcnow().isoformat())
-# #         pr_number = str(pr.get('number', 'unknown'))
-        
-# #         # Check if PR was merged
-# #         if action == 'closed' and pr.get('merged'):
-# #             event_action = 'MERGE'
-# #             logger.info(f"Parsed MERGE: {author} ({from_branch} -> {to_branch})")
-# #         else:
-# #             event_action = 'PULL_REQUEST'
-# #             logger.info(f"Parsed PULL_REQUEST: {author} ({from_branch} -> {to_branch})")
-        
-# #         return {
-# #             'request_id': pr_number,
-# #             'author': author,
-# #             'action': event_action,
-# #             'from_branch': from_branch,
-# #             'to_branch': to_branch,
-# #             'timestamp': timestamp
-# #         }
-# #     except Exception as e:
-# #         logger.error(f"Error parsing pull request: {e}", exc_info=True)
-# #         return None
-
-# def parse_pull_request(data: dict) -> Optional[dict]:
-#     """Parse GitHub pull request webhook payload"""
-#     try:
-#         pr = data.get('pull_request', {})
-#         action = data.get('action', '')
-        
-#         # Log the action we received
-#         logger.debug(f"PR webhook action: {action}")
-        
-#         # Only process 'opened' and 'closed' actions
-#         if action not in ['opened', 'closed']:
-#             logger.debug(f"Skipping PR action: {action}")
-#             return None
-        
-#         # Extract PR data
-#         author = pr.get('user', {}).get('login', 'Unknown')
-#         from_branch = pr.get('head', {}).get('ref', 'unknown')
-#         to_branch = pr.get('base', {}).get('ref', 'unknown')
-#         timestamp = pr.get('created_at', datetime.utcnow().isoformat())
-#         pr_number = str(pr.get('number', 'unknown'))
-        
-#         # Determine if it's a MERGE or PULL_REQUEST
-#         if action == 'closed' and pr.get('merged'):
-#             event_action = 'MERGE'
-#             logger.info(f"Parsed MERGE: {author} ({from_branch} -> {to_branch})")
-#         else:
-#             event_action = 'PULL_REQUEST'
-#             logger.info(f"Parsed PULL_REQUEST: {author} ({from_branch} -> {to_branch})")
-        
-#         # Build event data
-#         event_data = {
-#             'request_id': pr_number,
-#             'author': author,
-#             'action': event_action,
-#             'from_branch': from_branch,
-#             'to_branch': to_branch,
-#             'timestamp': timestamp
-#         }
-        
-#         # Debug log before returning
-#         logger.debug(f"Returning event data: {event_data}")
-        
-#         # IMPORTANT: Return INSIDE the try block!
-#         return event_data
-        
-#     except Exception as e:
-#         logger.error(f"Error parsing pull request: {e}", exc_info=True)
-#         return None
-
 
 import logging
 from datetime import datetime
@@ -145,7 +9,6 @@ logger = logging.getLogger(__name__)
 def parse_webhook(data: dict) -> Optional[dict]:
     """Main webhook parser - detects event type and routes to specific parser"""
     
-    # Detect event type
     if 'ref' in data and 'commits' in data:
         return parse_push(data)
     elif 'pull_request' in data:
@@ -160,29 +23,24 @@ def parse_push(data: dict) -> Optional[dict]:
     try:
         commits = data.get('commits', [])
         
-        # Handle empty commits (new branch creation)
         if not commits:
             logger.info("Push event with no commits (new branch or tag)")
             
-            # Try to get info from head_commit instead
             head_commit = data.get('head_commit')
             if head_commit:
                 author = head_commit.get('author', {}).get('name', 'Unknown')
                 timestamp = head_commit.get('timestamp', datetime.utcnow().isoformat())
                 commit_id = head_commit.get('id', str(uuid4()))
             else:
-                # Fallback to pusher info
                 author = data.get('pusher', {}).get('name', 'Unknown')
                 timestamp = datetime.utcnow().isoformat()
                 commit_id = str(uuid4())
         else:
-            # Normal case: use first commit
             first_commit = commits[0]
             author = first_commit.get('author', {}).get('name', 'Unknown')
             timestamp = first_commit.get('timestamp', datetime.utcnow().isoformat())
             commit_id = first_commit.get('id', str(uuid4()))
         
-        # Extract branch name
         ref = data.get('ref', 'refs/heads/unknown')
         branch = ref.split('/')[-1]
         
@@ -210,7 +68,6 @@ def parse_pull_request(data: dict) -> Optional[dict]:
         
         logger.info(f"PR webhook action received: {action}")
         
-        # Only process 'opened' and 'closed' actions
         if action not in ['opened', 'closed']:
             logger.info(f"⏭️  Skipping PR action '{action}' (only processing 'opened' and 'closed')")
             return None
@@ -222,7 +79,6 @@ def parse_pull_request(data: dict) -> Optional[dict]:
         timestamp = pr.get('created_at', datetime.utcnow().isoformat())
         pr_number = str(pr.get('number', 'unknown'))
         
-        # Determine if it's a MERGE or PULL_REQUEST
         if action == 'closed' and pr.get('merged'):
             event_action = 'MERGE'
             logger.info(f"✅ Parsed MERGE: {author} ({from_branch} -> {to_branch})")
@@ -230,7 +86,6 @@ def parse_pull_request(data: dict) -> Optional[dict]:
             event_action = 'PULL_REQUEST'
             logger.info(f"✅ Parsed PULL_REQUEST: {author} ({from_branch} -> {to_branch})")
         
-        # Build and return event data
         return {
             'request_id': pr_number,
             'author': author,

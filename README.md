@@ -8,7 +8,7 @@
 
 - **Frontend:** [techstax-assignment-webhook-repo-nt.vercel.app](https://techstax-assignment-webhook-repo-nt.vercel.app/)
 - **Backend API:** [echstax-assignment-webhook-repo-iamvamsi1725-vdm3vfi8.apn.leapcell.dev](https://echstax-assignment-webhook-repo-iamvamsi1725-vdm3vfi8.apn.leapcell.dev)
-- **Health Check:**[/health endpoint](https://echstax-assignment-webhook-repo-iamvamsi1725-vdm3vfi8.apn.leapcell.dev/health)
+- **Health Check:**[/health endpoint]https://echstax-assignment-webhook-repo-iamvamsi1725-vdm3vfl8.apn.leapcell.dev/health
 - **Test Repository:** [github.com/Vamsi-o/action-repo](https://github.com/Vamsi-o/action-repo)
 
 ---

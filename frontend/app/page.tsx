@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { Activity, GitBranch, GitMerge, GitPullRequest, RefreshCw } from 'lucide-react';
-// import { EventCard } from '@/components/EventCard';
 import { EventCard } from './components/EventCard';
 import { WebhookEvent, EventStats } from '@/types/event';
 
@@ -41,16 +40,14 @@ const fetchEvents = async (showToast = false) => {
 
     const data: WebhookEvent[] = await response.json();
     
-    // Sort by timestamp - newest first
     data.sort((a, b) => {
       const dateA = new Date(a.timestamp).getTime();
       const dateB = new Date(b.timestamp).getTime();
       return dateB - dateA; // Descending order
     });
     
-    // Check for new events (compare with current first item)
     if (events.length > 0 && data.length > events.length) {
-      const newEvent = data[0]; // Now this is definitely the newest
+      const newEvent = data[0]; 
       toast.success(`New ${newEvent.action} event!`, {
         description: `${newEvent.author} → ${newEvent.to_branch}`,
         duration: 4000,
@@ -119,7 +116,6 @@ const fetchEvents = async (showToast = false) => {
               </p>
             </div>
             
-            {/* Live indicator */}
             <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
               <motion.div
                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
@@ -130,7 +126,6 @@ const fetchEvents = async (showToast = false) => {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-4 gap-4">
             <div className="bg-white/5 rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-colors">
               <div className="flex items-center gap-2 mb-2">
@@ -209,13 +204,14 @@ const fetchEvents = async (showToast = false) => {
             </div>
           </div>
 
-          {/* Controls */}
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10">
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <RefreshCw className={`w-4 h-4 ${isPolling ? 'animate-spin' : ''}`} />
-                <span>
-                Updated {isLoading ? 'Loading...' : getLastUpdateText()}
-                </span>
+                {isLoading ? (
+                  <span>Loading...</span>
+                ) : (
+                  <span>Updated {getLastUpdateText()}</span>
+                )}
             </div>
             
             <button
@@ -228,7 +224,6 @@ const fetchEvents = async (showToast = false) => {
           </div>
         </motion.div>
 
-        {/* Timeline */}
         <div className="space-y-3">
           {isLoading ? (
             <div className="space-y-3">
